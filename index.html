@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Review Website</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        header {
+            background: #ff6b6b;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
+            font-family: 'Pacifico', cursive;
+            font-size: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        main {
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        #review-form, #reviews {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        input, textarea, button {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: 0.3s ease;
+        }
+        
+        input, textarea {
+            background: #f9f9f9;
+            color: #333;
+        }
+        
+        button {
+            background: #ff6b6b;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+        }
+        
+        button:hover {
+            background: #ff4757;
+        }
+        
+        #reviews-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .review-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .review-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Book Review Hub</h1>
+    </header>
+    
+    <main>
+        <section id="review-form">
+            <h2>Add a Book Review</h2>
+            <form id="bookForm">
+                <input type="text" id="title" placeholder="Book Title" required>
+                <input type="text" id="author" placeholder="Author" required>
+                <textarea id="review" placeholder="Write your review here..." required></textarea>
+                <input type="number" id="rating" placeholder="Rating (1-5)" min="1" max="5" required>
+                <button type="submit">Add Review</button>
+            </form>
+        </section>
+
+        <section id="reviews">
+            <h2>Reviews</h2>
+            <input type="text" id="search" placeholder="Search reviews...">
+            <div id="reviews-list"></div>
+        </section>
+    </main>
+
+    <script>
+        // Get references to DOM elements
+        const bookForm = document.getElementById('bookForm');
+        const reviewsList = document.getElementById('reviews-list');
+        const searchInput = document.getElementById('search');
+
+        // Load reviews from localStorage on page load
+        document.addEventListener('DOMContentLoaded', loadReviews);
+
+        // Add a new review
+        bookForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const review = document.getElementById('review').value;
+            const rating = document.getElementById('rating').value;
+
+            if (title && author && review && rating) {
+                const newReview = {
+                    title,
+                    author,
+                    review,
+                    rating,
+                    id: Date.now() // Unique ID based on timestamp
+                };
+                
+                // Get existing reviews from localStorage or initialize an empty array
+                const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+                
+                // Add the new review to the array
+                reviews.push(newReview);
+                
+                // Save the updated reviews to localStorage
+                localStorage.setItem('reviews', JSON.stringify(reviews));
+                
+                // Clear the form
+                bookForm.reset();
+                
+                // Reload the reviews list
+                loadReviews();
+            }
+        });
+
+        // Load reviews from localStorage and display them
+        function loadReviews() {
+            const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+            reviewsList.innerHTML = ''; // Clear the reviews list before adding new ones
+
+            reviews.forEach(function(review) {
+                const reviewItem = document.createElement('div');
+                reviewItem.classList.add('review-item');
+                reviewItem.innerHTML = `
+                    <h3>${review.title} by ${review.author}</h3>
+                    <p><strong>Rating:</strong> ${review.rating}</p>
+                    <p>${review.review}</p>
+                `;
+                reviewsList.appendChild(reviewItem);
+            });
+        }
+
+        // Search reviews based on input
+        searchInput.addEventListener('input', function() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+            
+            // Filter reviews based on title or author
+            const filteredReviews = reviews.filter(function(review) {
+                return review.title.toLowerCase().includes(searchTerm) ||
+                       review.author.toLowerCase().includes(searchTerm);
+            });
+            
+            // Display filtered reviews
+            reviewsList.innerHTML = '';
+            filteredReviews.forEach(function(review) {
+                const reviewItem = document.createElement('div');
+                reviewItem.classList.add('review-item');
+                reviewItem.innerHTML = `
+                    <h3>${review.title} by ${review.author}</h3>
+                    <p><strong>Rating:</strong> ${review.rating}</p>
+                    <p>${review.review}</p>
+                `;
+                reviewsList.appendChild(reviewItem);
+            });
+        });
+    </script>
+</body>
+</html>
